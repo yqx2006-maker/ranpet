@@ -6,6 +6,7 @@ import {
   Flame,
   LogOut,
   Mail,
+  PawPrint,
   RotateCcw,
   Save,
   ShieldCheck,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 import { DataImportModal } from '../components/DataImportModal';
 import { Modal } from '../components/Modal';
+import { PetAvatar } from '../components/PetAvatar';
 import { useAppStore } from '../store/useAppStore';
 import {
   EQUIP_LABEL,
@@ -23,7 +25,8 @@ import {
   type Goal,
   type Level,
 } from '../types';
-import { formatMonthDay } from '../utils/date';
+import { formatMonthDay, todayISO } from '../utils/date';
+import { getPetMood, getPetStage } from '../utils/pet';
 import { getStreak, getTotalMinutes } from '../utils/stats';
 
 export function ProfilePage() {
@@ -50,6 +53,9 @@ export function ProfilePage() {
   const streak = getStreak(personal.workouts);
   const totalMinutes = getTotalMinutes(personal.workouts);
   const unlockedCount = personal.achievements.filter((item) => item.unlockedAt).length;
+  const trainedToday = personal.workouts.some((item) => item.date === todayISO());
+  const petStage = getPetStage(personal.pet.xp);
+  const petMood = getPetMood(personal.pet, trainedToday);
 
   const save = () => {
     updateProfile({
@@ -118,6 +124,26 @@ export function ProfilePage() {
             <span className="tag">
               每周 {user.daysPerWeek} 练 · {user.sessionMinutes} 分钟
             </span>
+          </div>
+
+          <div className="profile-pet">
+            <div className="profile-pet-head">
+              <span className="eyebrow">我的伙伴</span>
+              <span className="stage-pill">{petStage.name}</span>
+            </div>
+            <div className="profile-pet-stage">
+              <PetAvatar pet={personal.pet} mood={petMood} size={260} />
+            </div>
+            <strong className="profile-pet-name">{personal.pet.name}</strong>
+            <p className="profile-pet-note">{petStage.tagline}</p>
+            <button
+              className="button ghost profile-pet-link"
+              type="button"
+              onClick={() => navigate('/pet')}
+            >
+              <PawPrint size={16} />
+              查看伙伴与装扮
+            </button>
           </div>
         </article>
 
