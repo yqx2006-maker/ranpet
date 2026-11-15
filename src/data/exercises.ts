@@ -1,5 +1,6 @@
 import type { Exercise } from '../types';
 import { EXERCISE_IMAGES } from './exerciseImages';
+import { assetUrl } from '../utils/asset';
 
 const ALL = ['beginner', 'intermediate', 'advanced'] as const;
 const MID = ['intermediate', 'advanced'] as const;
@@ -931,8 +932,8 @@ export const EXERCISES: Exercise[] = BASE_EXERCISES.map((exercise) => {
   const media = EXERCISE_IMAGES[exercise.id];
   return {
     ...exercise,
-    imageUrl: media?.image,
-    imageUrl2: media?.image2,
+    imageUrl: media ? assetUrl(media.image) : undefined,
+    imageUrl2: media?.image2 ? assetUrl(media.image2) : undefined,
   };
 });
 

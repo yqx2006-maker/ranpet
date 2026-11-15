@@ -1,4 +1,5 @@
 import type { PetBuilderConfig, PetBuilderTail, PetExpression } from '../types';
+import { assetUrl } from './asset';
 
 export const DEFAULT_PET_BUILDER: PetBuilderConfig = {
   shape: 'round',
@@ -28,7 +29,7 @@ export const PET_CHARACTERS: PetCharacter[] = [
   {
     id: 'coral-cat',
     label: '珊瑚猫',
-    image: '/pets/views/coral-cat/000.webp?v=2',
+    image: assetUrl('/pets/views/coral-cat/000.webp?v=2'),
     primary: 'var(--coral)',
     secondary: 'var(--yellow-soft)',
     hasViews: true,
@@ -36,7 +37,7 @@ export const PET_CHARACTERS: PetCharacter[] = [
   {
     id: 'mint-bear',
     label: '薄荷熊',
-    image: '/pets/views/mint-bear/000.webp?v=2',
+    image: assetUrl('/pets/views/mint-bear/000.webp?v=2'),
     primary: 'var(--teal)',
     secondary: 'var(--mint-soft)',
     hasViews: true,
@@ -44,7 +45,7 @@ export const PET_CHARACTERS: PetCharacter[] = [
   {
     id: 'lemon-chick',
     label: '柠檬鸡',
-    image: '/pets/views/lemon-chick/000.webp?v=2',
+    image: assetUrl('/pets/views/lemon-chick/000.webp?v=2'),
     primary: 'var(--yellow)',
     secondary: 'var(--coral-soft)',
     hasViews: true,
@@ -52,7 +53,7 @@ export const PET_CHARACTERS: PetCharacter[] = [
   {
     id: 'grape-rabbit',
     label: '葡萄兔',
-    image: '/pets/views/grape-rabbit/000.webp?v=2',
+    image: assetUrl('/pets/views/grape-rabbit/000.webp?v=2'),
     primary: 'var(--lilac)',
     secondary: 'var(--lilac-soft)',
     hasViews: true,
@@ -60,7 +61,7 @@ export const PET_CHARACTERS: PetCharacter[] = [
   {
     id: 'sky-dog',
     label: '天空犬',
-    image: '/pets/views/sky-dog/000.webp?v=2',
+    image: assetUrl('/pets/views/sky-dog/000.webp?v=2'),
     primary: '#7cb7e8',
     secondary: '#e6f2fb',
     hasViews: true,
@@ -68,7 +69,7 @@ export const PET_CHARACTERS: PetCharacter[] = [
   {
     id: 'rose-fox',
     label: '玫瑰狐',
-    image: '/pets/views/rose-fox/000.webp?v=2',
+    image: assetUrl('/pets/views/rose-fox/000.webp?v=2'),
     primary: '#e88aa0',
     secondary: '#ffe4ea',
     hasViews: true,
@@ -216,7 +217,7 @@ export function getPetAngleImage(
   if (!character.hasViews) return character.image;
   const angle = VIEW_ANGLES[((angleIndex % 8) + 8) % 8];
   const folder = stage >= 4 ? 's4' : stage >= 3 ? 's3' : stage >= 2 ? 's2' : '';
-  const base = `/pets/views/${character.id}`;
+  const base = assetUrl(`/pets/views/${character.id}`);
   return folder
     ? `${base}/${folder}/${angle}.webp`
     : `${base}/${angle}.webp?v=3`;
