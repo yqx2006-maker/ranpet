@@ -162,6 +162,62 @@ export function parseHealthReportFile(
   }
 }
 
+// 无后端时的本地文本解析：与后端规则解析保持一致的字段识别
+export function parseHealthReportText(raw: string): HealthReportDraft {
+  const text = String(raw || '')
+    .replace(/：/g, ':')
+    .replace(/[０-９]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0))
+    .replace(/／/g, '/');
+  const draft: HealthReportDraft = {};
+  const numberAfter = (pattern: RegExp): number | undefined => {
+    const matched = text.match(pattern);
+    if (!matched) return undefined;
+    const value = Number(matched[1].replace(/[^\d.]/g, ''));
+    return Number.isFinite(value) ? value : undefined;
+  };
+
+  const dateMatch = text.match(/(20\d{2})[年\-/.](\d{1,2})[月\-/.](\d{1,2})/);
+  if (dateMatch) {
+    draft.date = `${dateMatch[1]}-${String(dateMatch[2]).padStart(2, '0')}-${String(
+      dateMatch[3],
+    ).padStart(2, '0')}`;
+  }
+  draft.heightCm = numberAfter(/身高\s*:?\s*(\d{2,3}(?:\.\d+)?)/i);
+  draft.weightKg = numberAfter(/体重\s*:?\s*(\d{2,3}(?:\.\d+)?)/i);
+  draft.bodyFatPercent = numberAfter(/体脂(?:率|百分比)?\s*:?\s*(\d{1,2}(?:\.\d+)?)/i);
+  draft.waistCm = numberAfter(/腰围\s*:?\s*(\d{2,3}(?:\.\d+)?)/i);
+  draft.restingHeartRate = numberAfter(/(?:静息心率|心率|脉搏)\s*:?\s*(\d{2,3})/i);
+  const bmiValue = numberAfter(/bmi\s*:?\s*(\d{2}(?:\.\d+)?)/i);
+  if (bmiValue !== undefined) draft.bmi = bmiValue;
+
+  const bloodPressure = text.match(/(?:血压|bp)\s*:?\s*(\d{2,3})\s*\/\s*(\d{2,3})/i);
+  if (bloodPressure) {
+    draft.systolic = Number(bloodPressure[1]);
+    draft.diastolic = Number(bloodPressure[2]);
+  }
+
+  const note = text.match(/(?:备注|结论|医生建议)\s*:?\s*([^\n\r]{2,120})/);
+  if (note) draft.notes = note[1].trim();
+
+  if (draft.heightCm !== undefined && draft.heightCm > 0 && draft.heightCm < 3) {
+    draft.heightCm *= 100;
+  }
+  if (
+    draft.bodyFatPercent !== undefined &&
+    draft.bodyFatPercent > 0 &&
+    draft.bodyFatPercent <= 1
+  ) {
+    draft.bodyFatPercent *= 100;
+  }
+  if (!draft.bmi && draft.heightCm && draft.weightKg) {
+    draft.bmi = Math.round((draft.weightKg / Math.pow(draft.heightCm / 100, 2)) * 10) / 10;
+  }
+
+  return Object.fromEntries(
+    Object.entries(draft).filter(([, value]) => value !== undefined && value !== null),
+  ) as HealthReportDraft;
+}
+
 export function healthReportCsvTemplate(): string {
   return [
     'date,height,weight,bodyFat,waist,systolic,diastolic,heartRate,note',

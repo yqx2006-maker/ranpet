@@ -14,6 +14,7 @@ import { todayISO } from '../utils/date';
 import {
   healthReportCsvTemplate,
   parseHealthReportFile,
+  parseHealthReportText,
   sampleHealthReportText,
 } from '../utils/healthReport';
 import { Modal } from './Modal';
@@ -60,9 +61,27 @@ async function parseWithServer(payload: {
     error?: string;
   };
   if (!response.ok) {
+    if (response.status === 404 || response.status === 405) {
+      throw new Error('PDF / 图片解析需要后端服务，当前静态部署不可用；请改用粘贴文本或 CSV / JSON 导入');
+    }
     throw new Error(data.error || `解析失败 (${response.status})`);
   }
   return { draft: data.draft || {}, provider: data.provider, warning: data.warning };
+}
+
+const METRIC_KEYS: (keyof HealthReportDraft)[] = [
+  'heightCm',
+  'weightKg',
+  'bodyFatPercent',
+  'waistCm',
+  'systolic',
+  'diastolic',
+  'restingHeartRate',
+  'bmi',
+];
+
+function hasMetricValues(draft: HealthReportDraft): boolean {
+  return METRIC_KEYS.some((key) => draft[key] !== undefined);
 }
 
 export function HealthReportModal({ open, onClose }: HealthReportModalProps) {
@@ -151,8 +170,15 @@ export function HealthReportModal({ open, onClose }: HealthReportModalProps) {
       const parsed = await parseWithServer({ text });
       applyDraft(parsed.draft, parsed.provider || 'rules');
       setWarning(parsed.warning || '');
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : '报告解析失败');
+    } catch {
+      // 静态部署没有后端时，用本地规则解析文本
+      const draft = parseHealthReportText(text);
+      if (hasMetricValues(draft)) {
+        applyDraft(draft, 'rules');
+        setWarning('当前为静态部署，已用本地规则解析，请核对后再保存。');
+      } else {
+        setError('没有识别到身体数据，请检查文本格式，或改用 CSV / JSON 导入');
+      }
     } finally {
       setParsing(false);
     }
